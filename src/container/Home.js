@@ -1,38 +1,53 @@
-import React, { useState, useEffect } from "react"
-import axios from "axios"
+import React, { Component } from "react"
+import {Link} from "react-router-dom"
+
+import {get} from "../controller/render"
 
 const appId = "b0777b7a";
 const appKey = "cbe3c1efceb1fd81cfa5d26f06f2ad01";
-const apiUrl = `https://api.edamam.com/search?q=q=fish&app_id=${appId}&app_key=${appKey}`; 
+const apiUrl = `https://api.edamam.com/search?q=q=fish&app_id=${appId}&app_key=${appKey}&from=0&to=3`;
 
-function Home() {
-    const [recipes, setRecipes] = useState([]);
+export default class Home extends Component {
+    constructor(props){
+        super(props);
+        this.state = {
+            recipes: []
+        }
+    }
 
-    useEffect(() => {
-        axios(apiUrl).then(({data}) => {
-            console.log(data.hits);
-            setRecipes(data.hits);
-        }) 
-    })
+    async componentDidMount() {
+        let data = await get(apiUrl);
+        this.props.changeSelected(null);
+        this.setState({
+            recipes: [ ...this.state.recipes, ...data.hits]
+        })
+    }
 
-    // const recipeList = recipes.length !== 0 ? (
-    //     recipes.map(recipe => {
-    //         console.log(recipe);
-    //         return (
-    //             <div key={recipe.uri}>
-    //                 {recipe.image}
-    //             </div>
-    //         )
-    //     })
-    // ) : (
-    //     <div>Fetching recipes...</div>
-    // )
+    render() {
+        const recipes = this.state.recipes.map(recipe => {
+            return recipe.recipe
+        })
 
-    return (
-        <div>
-            {/* {recipeList} */}
-        </div>
-    )
+        const recipeList = recipes.length !== 0 ? (
+            recipes.map(recipe => {
+                return (
+                    <div key={recipe.uri}>
+                        <Link 
+                            to={"/recipes/" + recipe.label}
+                            onClick={() => {this.props.changeSelected(recipe)}} 
+                        > {recipe.label}
+                        </Link>
+                    </div>
+                )
+            })
+        ) : (
+            <div>Fetching recipes...</div>
+        )
+
+        return (
+            <div>
+                {recipeList}
+            </div>
+        )
+    }
 }
-
-export default Home
